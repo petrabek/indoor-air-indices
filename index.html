@@ -257,24 +257,40 @@ var INDEX_INFO = {
 function recommend() {
   var c = state.concern, b = state.building;
   var primary, secondary, reason;
-  if(b === 'renovation' || c.indexOf('hcho') > -1) {
+
+  // Concern takes priority — the user knows their specific situation
+  if(c.indexOf('hcho') > -1) {
     primary = 'CLIM2000'; secondary = 'IAPI';
-    reason = 'Renovation spaces and environments with synthetic materials emit elevated HCHO and TVOC. CLIM2000 is most sensitive to formaldehyde and gives the clearest signal in chemically polluted environments.';
-  } else if(b === 'hospital') {
-    primary = 'IEITW'; secondary = 'IAPI';
-    reason = 'Hospitals require high sensitivity to any air quality deviation. IEITW hard threshold scoring immediately flags pollutant levels that exceed safe limits, making it suitable for critical environments.';
-  } else if(b === 'school' || b === 'office' || c.indexOf('ventilation') > -1) {
-    primary = 'IEITW'; secondary = 'IEI';
-    reason = 'Schools and offices are occupancy-driven environments where CO2 and CO accumulate with activity. IEITW is most sensitive to these pollutants, directly tracking ventilation effectiveness and occupancy load.';
-  } else if(c.indexOf('pm') > -1 || b === 'industrial') {
+    reason = 'Formaldehyde and VOCs are best captured by CLIM2000, which is most sensitive to HCHO regardless of building type. The cluster analysis confirms CLIM2000 reacts most strongly to HCHO differences between environments.';
+  } else if(c.indexOf('pm') > -1) {
     primary = 'IAPI'; secondary = 'IEI';
-    reason = 'Particulate-heavy environments (urban, industrial, cooking-adjacent) are best captured by IAPI, which is most reactive to PM2.5 and PM10.';
+    reason = 'Particulate matter (PM2.5 and PM10) is best captured by IAPI, which is most reactive to particulate differences across environments. The scenario analysis confirms IAPI peaks in particulate-heavy conditions.';
+  } else if(c.indexOf('ventilation') > -1) {
+    primary = 'IEITW'; secondary = 'IEI';
+    reason = 'CO2 and ventilation monitoring is best served by IEITW, which is most sensitive to CO2 and CO accumulation. Its threshold-based scoring directly flags when ventilation is insufficient.';
   } else if(c.indexOf('comfort') > -1) {
     primary = 'IEI'; secondary = 'IAPI';
-    reason = 'When occupant comfort matters alongside air quality, IEI is the right choice. It extends IAPI with a comfort index covering temperature and humidity.';
+    reason = 'When occupant comfort matters alongside air quality, IEI is the right choice. It is the only index that incorporates temperature and humidity through its Indoor Discomfort Index component.';
+
+  // General concern — use building type as tiebreaker
+  } else if(b === 'hospital') {
+    primary = 'IEITW'; secondary = 'IAPI';
+    reason = 'Hospitals require high sensitivity to any air quality deviation. IEITW hard threshold scoring immediately flags pollutant levels that exceed safe limits, making it suitable for critical environments where early warning takes priority.';
+  } else if(b === 'renovation') {
+    primary = 'CLIM2000'; secondary = 'IAPI';
+    reason = 'Newly built or renovated spaces typically emit elevated HCHO and TVOC from building materials. CLIM2000 is most sensitive to these chemical pollutants and gives the clearest signal in such environments.';
+  } else if(b === 'industrial') {
+    primary = 'IAPI'; secondary = 'IEI';
+    reason = 'Industrial and urban environments are typically dominated by particulate matter. IAPI is most reactive to PM2.5 and PM10 and is best suited for environments with high particulate load.';
+  } else if(b === 'school' || b === 'office') {
+    primary = 'IEITW'; secondary = 'IEI';
+    reason = 'Schools and offices are occupancy-driven environments where CO2 and CO accumulate with activity. IEITW directly tracks ventilation effectiveness and occupancy load, making it the natural choice for these settings.';
+  } else if(b === 'residential') {
+    primary = 'IEI'; secondary = 'IAPI';
+    reason = 'For residential settings with no dominant pollutant concern, IEI provides the most balanced assessment — combining air pollutant coverage with comfort factors relevant to everyday living conditions.';
   } else {
     primary = 'IEI'; secondary = 'CLIM2000';
-    reason = 'For a general-purpose evaluation where no single pollutant dominates, IEI provides the most balanced assessment combining full pollutant coverage with comfort factors.';
+    reason = 'For a general-purpose evaluation where no specific pollutant or building type dominates, IEI provides the most balanced assessment combining full pollutant coverage with comfort factors.';
   }
   return { primary: primary, secondary: secondary, reason: reason };
 }
