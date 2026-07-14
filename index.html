@@ -87,6 +87,24 @@
     .warning-box { background: var(--bg-warning); border: 1px solid var(--border-warning); border-radius: var(--radius); padding: 0.75rem 1rem; font-size: 0.875rem; color: var(--text-warning); margin-bottom: 1rem; font-family: var(--font-ui); }
     .method-note { margin-top: 2rem; padding: 0.9rem 1.1rem; border-left: 3px solid var(--border-strong); font-size: 0.82rem; color: var(--text-muted); line-height: 1.65; font-family: var(--font-ui); }
     .method-note strong { color: var(--text-secondary); }
+    .caveat-box { background: var(--bg-warning); border: 1px solid var(--border-warning); border-radius: var(--radius); padding: 0.7rem 0.95rem; font-size: 0.85rem; color: var(--text-warning); margin-bottom: 0.6rem; font-family: var(--font-ui); line-height: 1.6; }
+    .adjust-panel { border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-1); padding: 1.1rem 1.25rem; margin-top: 1.25rem; }
+    .adjust-title { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); font-family: var(--font-ui); margin-bottom: 0.9rem; }
+    .adjust-row { margin-bottom: 1.1rem; }
+    .adjust-row:last-child { margin-bottom: 0; }
+    .adjust-label { font-size: 0.82rem; color: var(--text-secondary); font-family: var(--font-ui); margin-bottom: 0.45rem; display:flex; justify-content:space-between; }
+    .adjust-label .val { color: var(--text-accent); font-weight: 500; }
+    .toggle-row { display: flex; gap: 5px; flex-wrap: wrap; }
+    .toggle-chip { padding: 0.4rem 0.7rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-2); cursor: pointer; font-size: 0.78rem; color: var(--text-primary); font-family: var(--font-ui); transition: border-color 0.12s, background 0.12s; }
+    .toggle-chip:hover { border-color: var(--border-accent); background: var(--bg-accent); }
+    .toggle-chip.active { border-color: var(--fill-accent); background: var(--bg-accent); color: var(--text-accent); font-weight: 500; }
+    .slider-track { width: 100%; -webkit-appearance: none; appearance: none; height: 4px; border-radius: 2px; background: var(--border); outline: none; margin: 0.5rem 0 0.35rem; }
+    .slider-track::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--fill-accent); cursor: pointer; border: 2px solid var(--surface-2); }
+    .slider-track::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: var(--fill-accent); cursor: pointer; border: 2px solid var(--surface-2); }
+    .slider-ticks { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-ui); padding: 0 1px; }
+    .slider-ticks span.active { color: var(--text-accent); font-weight: 600; }
+    .result-card.flash { animation: flashCard 0.5s ease; }
+    @keyframes flashCard { 0% { background: var(--bg-accent); } 100% { background: var(--surface-2); } }
     .site-footer { max-width: 760px; margin: 0 auto; padding: 1.25rem 1.25rem 2rem; border-top: 1px solid var(--border); font-size: 0.8rem; color: var(--text-muted); font-family: var(--font-ui); }
     @media (max-width: 480px) { .options-grid { grid-template-columns: 1fr 1fr; } .site-header { padding: 1.5rem 1rem 1.25rem; } }
   </style>
@@ -96,7 +114,7 @@
 <header class="site-header">
   <div class="site-header-inner">
     <h1>IAQ Index Decision Tool</h1>
-    <p>Tool based on framework developed for selecting the best-fitting indoor air quality index for specific contexts and conditions.</p>
+    <p>Tool based on a four-criterion framework — building type, occupant-vulnerability tier, monitoring capability, and pollutant concern — for selecting the best-fitting indoor air quality index for specific contexts and conditions.</p>
     
   </div>
 </header>
@@ -110,10 +128,10 @@
 
   <!-- SELECTOR -->
   <section id="tab-selector" class="section active">
-    <div class="progress-bar"><div class="progress-fill" id="progress" style="width:20%"></div></div>
+    <div class="progress-bar"><div class="progress-fill" id="progress" style="width:25%"></div></div>
 
     <div id="step1" class="step-section">
-      <div class="step-header"><span class="step-pill">Step 1 of 2</span><span class="step-title">What type of building?</span></div>
+      <div class="step-header"><span class="step-pill">Step 1 of 4</span><span class="step-title">What type of building?</span></div>
       <div class="options-grid">
         <button class="opt-btn" onclick="select('building','residential',this)">Residential</button>
         <button class="opt-btn" onclick="select('building','school',this)">School</button>
@@ -126,7 +144,35 @@
     </div>
 
     <div id="step2" class="step-section" style="display:none">
-      <div class="step-header"><span class="step-pill">Step 2 of 2</span><span class="step-title">What is the primary concern?</span></div>
+      <div class="step-header"><span class="step-pill">Step 2 of 4</span><span class="step-title">Occupant-vulnerability tier</span></div>
+      <p class="hint">Who primarily occupies the space?</p>
+      <div class="options-grid">
+        <button class="opt-btn" onclick="select('tier','A',this)">Tier A — Vulnerable use (school, healthcare, elderly/childcare)</button>
+        <button class="opt-btn" onclick="select('tier','B',this)">Tier B — Regular public use (office, government, library)</button>
+        <button class="opt-btn" onclick="select('tier','C',this)">Tier C — Occasional use (retail, hospitality, events)</button>
+      </div>
+      <div class="nav-row">
+        <button class="btn" onclick="goToStep(1)">Back</button>
+        <button class="btn primary" onclick="nextStep(2)" id="next2" disabled>Next</button>
+      </div>
+    </div>
+
+    <div id="step3" class="step-section" style="display:none">
+      <div class="step-header"><span class="step-pill">Step 3 of 4</span><span class="step-title">Monitoring capability</span></div>
+      <p class="hint">What can you actually measure?</p>
+      <div class="options-grid">
+        <button class="opt-btn" onclick="select('monitoring','continuous',this)">Continuous — IoT, multi-pollutant sensors</button>
+        <button class="opt-btn" onclick="select('monitoring','periodic',this)">Periodic — scheduled spot-checks</button>
+        <button class="opt-btn" onclick="select('monitoring','basic',this)">Basic — single sensor (e.g. CO₂ only)</button>
+      </div>
+      <div class="nav-row">
+        <button class="btn" onclick="goToStep(2)">Back</button>
+        <button class="btn primary" onclick="nextStep(3)" id="next3" disabled>Next</button>
+      </div>
+    </div>
+
+    <div id="step4" class="step-section" style="display:none">
+      <div class="step-header"><span class="step-pill">Step 4 of 4</span><span class="step-title">What is the primary concern?</span></div>
       <p class="hint">Select one or more</p>
       <div class="options-grid">
         <button class="opt-btn" onclick="multiSelect('concern','hcho',this)">Formaldehyde / VOCs</button>
@@ -136,15 +182,64 @@
         <button class="opt-btn" onclick="multiSelect('concern','general',this)">General air quality overview</button>
       </div>
       <div class="nav-row">
-        <button class="btn" onclick="goToStep(1)">Back</button>
-        <button class="btn primary" onclick="showResult()" id="next2" disabled>Next</button>
+        <button class="btn" onclick="goToStep(3)">Back</button>
+        <button class="btn primary" onclick="showResult()" id="next4" disabled>Next</button>
       </div>
     </div>
 
     <div id="result-panel" style="display:none">
       <div id="primary-result" class="result-card"></div>
       <div id="secondary-result"></div>
-      <button class="btn" onclick="resetTool()" style="margin-top:0.25rem">Start over</button>
+      <div id="caveats-result"></div>
+
+      <div class="adjust-panel">
+        <div class="adjust-title">Adjust &amp; explore — recommendation updates live</div>
+
+        <div class="adjust-row">
+          <div class="adjust-label">Building type</div>
+          <div class="toggle-row" id="adj-building">
+            <button class="toggle-chip" data-val="residential" onclick="adjustSet('building','residential',this)">Residential</button>
+            <button class="toggle-chip" data-val="school" onclick="adjustSet('building','school',this)">School</button>
+            <button class="toggle-chip" data-val="office" onclick="adjustSet('building','office',this)">Office</button>
+            <button class="toggle-chip" data-val="hospital" onclick="adjustSet('building','hospital',this)">Hospital</button>
+            <button class="toggle-chip" data-val="industrial" onclick="adjustSet('building','industrial',this)">Industrial / urban</button>
+            <button class="toggle-chip" data-val="renovation" onclick="adjustSet('building','renovation',this)">New build / renovation</button>
+          </div>
+        </div>
+
+        <div class="adjust-row">
+          <div class="adjust-label">Vulnerability tier <span class="val" id="adj-tier-label">—</span></div>
+          <input type="range" class="slider-track" id="adj-tier-slider" min="0" max="2" step="1" oninput="adjustSlider('tier', this.value)">
+          <div class="slider-ticks">
+            <span id="adj-tier-tick-0">A · Vulnerable</span>
+            <span id="adj-tier-tick-1">B · Regular</span>
+            <span id="adj-tier-tick-2">C · Occasional</span>
+          </div>
+        </div>
+
+        <div class="adjust-row">
+          <div class="adjust-label">Monitoring capability <span class="val" id="adj-mon-label">—</span></div>
+          <input type="range" class="slider-track" id="adj-mon-slider" min="0" max="2" step="1" oninput="adjustSlider('monitoring', this.value)">
+          <div class="slider-ticks">
+            <span id="adj-mon-tick-0">Continuous</span>
+            <span id="adj-mon-tick-1">Periodic</span>
+            <span id="adj-mon-tick-2">Basic</span>
+          </div>
+        </div>
+
+        <div class="adjust-row">
+          <div class="adjust-label">Primary concern (select one or more)</div>
+          <div class="toggle-row" id="adj-concern">
+            <button class="toggle-chip" data-val="hcho" onclick="adjustToggleConcern('hcho',this)">Formaldehyde / VOCs</button>
+            <button class="toggle-chip" data-val="pm" onclick="adjustToggleConcern('pm',this)">Particulate matter</button>
+            <button class="toggle-chip" data-val="ventilation" onclick="adjustToggleConcern('ventilation',this)">Ventilation / CO2</button>
+            <button class="toggle-chip" data-val="comfort" onclick="adjustToggleConcern('comfort',this)">Comfort</button>
+            <button class="toggle-chip" data-val="general" onclick="adjustToggleConcern('general',this)">General overview</button>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn" onclick="resetTool()" style="margin-top:0.9rem">Start over</button>
     </div>
 
     
@@ -178,7 +273,7 @@
 </footer>
 
 <script>
-var state = { building:null, concern:[] };
+var state = { building:null, tier:null, monitoring:null, concern:[] };
 
 function showTab(id, btn) {
   document.querySelectorAll('.section').forEach(function(s) { s.classList.remove('active'); });
@@ -191,7 +286,7 @@ function select(key, val, el) {
   state[key] = val;
   el.closest('.options-grid').querySelectorAll('.opt-btn').forEach(function(b) { b.classList.remove('selected'); });
   el.classList.add('selected');
-  var map = { building:'next1', audience:'next4' };
+  var map = { building:'next1', tier:'next2', monitoring:'next3' };
   if(map[key]) document.getElementById(map[key]).disabled = false;
 }
 
@@ -205,30 +300,30 @@ function multiSelect(key, val, el) {
     state[key].push(val);
     el.classList.add('multi-selected');
   }
-  var map = { concern:'next2', sensors:'next3' };
+  var map = { concern:'next4' };
   if(map[key]) document.getElementById(map[key]).disabled = state[key].length === 0;
 }
 
 function goToStep(n) {
   document.getElementById('step'+(n+1)).style.display = 'none';
   document.getElementById('step'+n).style.display = 'block';
-  document.getElementById('progress').style.width = (n/2*100)+'%';
+  document.getElementById('progress').style.width = (n/4*100)+'%';
 }
 
 function nextStep(current) {
   document.getElementById('step'+current).style.display = 'none';
   document.getElementById('step'+(current+1)).style.display = 'block';
-  document.getElementById('progress').style.width = ((current+1)/2*100)+'%';
+  document.getElementById('progress').style.width = ((current+1)/4*100)+'%';
 }
 
 function resetTool() {
-  state.building = null; state.concern = [];
+  state.building = null; state.tier = null; state.monitoring = null; state.concern = [];
   document.querySelectorAll('.step-section').forEach(function(s) { s.style.display = 'none'; });
   document.getElementById('step1').style.display = 'block';
   document.getElementById('result-panel').style.display = 'none';
   document.querySelectorAll('.opt-btn').forEach(function(b) { b.classList.remove('selected','multi-selected'); });
   ['next1','next2','next3','next4'].forEach(function(id) { document.getElementById(id).disabled = true; });
-  document.getElementById('progress').style.width = '20%';
+  document.getElementById('progress').style.width = '25%';
 }
 
 var INDEX_INFO = {
@@ -292,22 +387,124 @@ function recommend() {
     primary = 'IEI'; secondary = 'CLIM2000';
     reason = 'For a general-purpose evaluation where no specific pollutant or building type dominates, IEI provides the most balanced assessment combining full pollutant coverage with comfort factors.';
   }
-  return { primary: primary, secondary: secondary, reason: reason };
+
+  // --- Criterion 3: occupant-vulnerability tier (escalates conservatism) ---
+  var caveats = [];
+  var tier = state.tier;
+  if(tier === 'A') {
+    if(secondary !== 'IEITW' && primary !== 'IEITW') {
+      caveats.push('Tier A (vulnerable-use) setting: occupant vulnerability warrants the most conservative threshold available. Since ' + primary + ' does not use hard-threshold scoring, treat <strong>IEITW</strong> as a mandatory cross-check alongside the recommendation below.');
+      secondary = 'IEITW';
+    } else {
+      caveats.push('Tier A (vulnerable-use) setting: this recommendation already includes IEITW, whose hard-threshold scoring is the most conservative of the four indices — appropriate given occupant vulnerability here.');
+    }
+  } else if(tier === 'C') {
+    caveats.push('Tier C (occasional-use) setting: short dwell times limit cumulative exposure. CLIM2000\'s simple threshold-ratio calculation is usually adequate if monitoring resources are limited.');
+  }
+
+  // --- Criterion 4 (in UI order, computed here): monitoring capability (feasibility constraint) ---
+  var mon = state.monitoring;
+  if(mon === 'basic') {
+    caveats.push('With only single-parameter monitoring (e.g. CO\u2082-only) available, a full ' + primary + ' calculation is not possible. Track CO\u2082 directly against the relevant guideline as an IEITW-inspired proxy for ventilation adequacy until multi-pollutant sensing is added.');
+  } else if(mon === 'periodic') {
+    caveats.push('Periodic/spot-check monitoring suits threshold-ratio indices like CLIM2000 well, since a single snapshot against a fixed reference remains meaningful. Accumulation-sensitive indices (IEITW in particular) will under-represent transient peaks between measurements.');
+  }
+
+  return { primary: primary, secondary: secondary, reason: reason, caveats: caveats };
 }
 
 function showResult() {
+  document.querySelectorAll('.step-section').forEach(function(el) { el.style.display = 'none'; });
+  document.getElementById('progress').style.width = '100%';
+  syncAdjustPanel();
+  renderResult();
+  document.getElementById('result-panel').style.display = 'block';
+}
+
+var TIER_VALUES = ['A', 'B', 'C'];
+var MON_VALUES = ['continuous', 'periodic', 'basic'];
+
+function syncAdjustPanel() {
+  // Building toggle
+  document.querySelectorAll('#adj-building .toggle-chip').forEach(function(b) {
+    b.classList.toggle('active', b.getAttribute('data-val') === state.building);
+  });
+  // Concern chips
+  document.querySelectorAll('#adj-concern .toggle-chip').forEach(function(b) {
+    b.classList.toggle('active', state.concern.indexOf(b.getAttribute('data-val')) > -1);
+  });
+  // Tier slider
+  var tierIdx = Math.max(0, TIER_VALUES.indexOf(state.tier));
+  document.getElementById('adj-tier-slider').value = tierIdx;
+  updateTierLabel(tierIdx);
+  // Monitoring slider
+  var monIdx = Math.max(0, MON_VALUES.indexOf(state.monitoring));
+  document.getElementById('adj-mon-slider').value = monIdx;
+  updateMonLabel(monIdx);
+}
+
+function updateTierLabel(idx) {
+  var labels = { 0: 'A · Vulnerable', 1: 'B · Regular', 2: 'C · Occasional' };
+  document.getElementById('adj-tier-label').textContent = labels[idx];
+  for (var i = 0; i < 3; i++) {
+    document.getElementById('adj-tier-tick-' + i).classList.toggle('active', i == idx);
+  }
+}
+
+function updateMonLabel(idx) {
+  var labels = { 0: 'Continuous', 1: 'Periodic', 2: 'Basic' };
+  document.getElementById('adj-mon-label').textContent = labels[idx];
+  for (var i = 0; i < 3; i++) {
+    document.getElementById('adj-mon-tick-' + i).classList.toggle('active', i == idx);
+  }
+}
+
+function adjustSet(key, val, el) {
+  state[key] = val;
+  el.closest('.toggle-row').querySelectorAll('.toggle-chip').forEach(function(b) { b.classList.remove('active'); });
+  el.classList.add('active');
+  renderResult();
+}
+
+function adjustToggleConcern(val, el) {
+  var idx = state.concern.indexOf(val);
+  if (idx > -1) {
+    if (state.concern.length === 1) return; // keep at least one concern selected
+    state.concern.splice(idx, 1);
+    el.classList.remove('active');
+  } else {
+    state.concern.push(val);
+    el.classList.add('active');
+  }
+  renderResult();
+}
+
+function adjustSlider(key, rawIdx) {
+  var idx = parseInt(rawIdx, 10);
+  if (key === 'tier') {
+    state.tier = TIER_VALUES[idx];
+    updateTierLabel(idx);
+  } else if (key === 'monitoring') {
+    state.monitoring = MON_VALUES[idx];
+    updateMonLabel(idx);
+  }
+  renderResult();
+}
+
+function renderResult() {
   var rec = recommend();
-  var primary = rec.primary, secondary = rec.secondary, reason = rec.reason;
+  var primary = rec.primary, secondary = rec.secondary, reason = rec.reason, caveats = rec.caveats;
   var idx = INDEX_INFO[primary];
   var sidx = INDEX_INFO[secondary];
 
-  document.querySelectorAll('.step-section').forEach(function(el) { el.style.display = 'none'; });
-  document.getElementById('progress').style.width = '100%';
-
-  document.getElementById('primary-result').innerHTML =
+  var primaryEl = document.getElementById('primary-result');
+  primaryEl.innerHTML =
     '<span class="result-badge badge-primary">Primary recommendation</span>' +
     '<div class="index-name">' + idx.name + '</div>' +
     '<p class="result-reason">' + reason + '</p>';
+  primaryEl.classList.remove('flash');
+  void primaryEl.offsetWidth; // restart animation
+  primaryEl.classList.add('flash');
 
   document.getElementById('secondary-result').innerHTML =
     '<div class="result-card">' +
@@ -316,7 +513,10 @@ function showResult() {
     '<p class="result-reason" style="margin-bottom:0">' + sidx.desc + '</p>' +
     '</div>';
 
-  document.getElementById('result-panel').style.display = 'block';
+  var caveatsHtml = caveats.map(function(c) {
+    return '<div class="caveat-box">' + c + '</div>';
+  }).join('');
+  document.getElementById('caveats-result').innerHTML = caveatsHtml;
 }
 </script>
 </body>
