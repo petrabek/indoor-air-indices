@@ -161,6 +161,9 @@
         <button class="opt-btn" data-val="hcho" onclick="multiSelect('concern','hcho',this)">Formaldehyde (HCHO)<span class="priority-badge"></span></button>
         <button class="opt-btn" data-val="particulate" onclick="multiSelect('concern','particulate',this)">Particulate matter (PM10 / PM2.5)<span class="priority-badge"></span></button>
         <button class="opt-btn" data-val="gaseous" onclick="multiSelect('concern','gaseous',this)">Gaseous pollutants (CO2 / CO)<span class="priority-badge"></span></button>
+        <button class="opt-btn" data-val="tvoc" onclick="multiSelect('concern','tvoc',this)">TVOC<span class="priority-badge"></span></button>
+        <button class="opt-btn" data-val="comfort" onclick="multiSelect('concern','comfort',this)">Comfort (temperature / humidity)<span class="priority-badge"></span></button>
+        <button class="opt-btn" data-val="no2" onclick="multiSelect('concern','no2',this)">Nitrogen dioxide (NO2)<span class="priority-badge"></span></button>
       </div>
       <div class="nav-row">
         <button class="btn" onclick="goToStep(2)">Back</button>
@@ -206,6 +209,9 @@
             <button class="toggle-chip" data-val="hcho" onclick="adjustToggleConcern('hcho',this)">HCHO<span class="priority-badge"></span></button>
             <button class="toggle-chip" data-val="particulate" onclick="adjustToggleConcern('particulate',this)">Particulate<span class="priority-badge"></span></button>
             <button class="toggle-chip" data-val="gaseous" onclick="adjustToggleConcern('gaseous',this)">Gaseous<span class="priority-badge"></span></button>
+            <button class="toggle-chip" data-val="tvoc" onclick="adjustToggleConcern('tvoc',this)">TVOC<span class="priority-badge"></span></button>
+            <button class="toggle-chip" data-val="comfort" onclick="adjustToggleConcern('comfort',this)">Comfort<span class="priority-badge"></span></button>
+            <button class="toggle-chip" data-val="no2" onclick="adjustToggleConcern('no2',this)">NO2<span class="priority-badge"></span></button>
           </div>
         </div>
       </div>
@@ -353,27 +359,35 @@ var INDEX_INFO = {
 };
 
 // ---------------------------------------------------------------
-// Decision matrix, derived from the 3-cluster sensitivity analysis
-// (C1-C3 from weighted pairwise cluster differences, C4/C5 from Table 2
-// pollutant coverage, C6 from the share of simulated points each index
-// classifies into its own worst decile).
+// Decision matrix, derived from the 3-cluster sensitivity analysis.
+// C1-C6 (pollutant sensitivity) come from weighted pairwise cluster
+// differences; C7/C8 (coverage/burden) from Table 2 pollutant counts;
+// C9 (strictness) from the share of simulated points each index
+// classifies into its own worst decile.
+//
+// Note: C5 (comfort) reflects empirical co-movement with cluster
+// differences, not causal sensitivity -- only IEI actually models
+// temperature/humidity in its formula (per Table 2). For IAPI, CLIM2000
+// and IEITW, this value is confounded with other pollutants that
+// co-vary across clusters, since their formulas don't read comfort at all.
 // ---------------------------------------------------------------
 var DECISION_MATRIX = {
-  IAPI:        { C1_HCHO: 0.1486, C2_Particulate: 0.2054, C3_Gaseous: 0.1522, C4_Coverage: 6, C5_Burden: 6, C6_Strictness: 0.1012 },
-  CLIM2000:    { C1_HCHO: 0.2639, C2_Particulate: 0.1721, C3_Gaseous: 0.2716, C4_Coverage: 4, C5_Burden: 4, C6_Strictness: 0.1003 },
-  IEI:         { C1_HCHO: 0.1182, C2_Particulate: 0.2120, C3_Gaseous: 0.1174, C4_Coverage: 8, C5_Burden: 8, C6_Strictness: 0.1005 },
-  IEITW:       { C1_HCHO: 0.0903, C2_Particulate: 0.0569, C3_Gaseous: 0.0940, C4_Coverage: 5, C5_Burden: 5, C6_Strictness: 0.7917 }
+  IAPI:        { C1_HCHO: 0.1486, C2_Particulate: 0.2054, C3_Gaseous: 0.1522, C4_TVOC: 0.2133, C5_Comfort: 0.1883, C6_NO2: 0.1419, C7_Coverage: 6, C8_Burden: 6, C9_Strictness: 0.1012 },
+  CLIM2000:    { C1_HCHO: 0.2639, C2_Particulate: 0.1720, C3_Gaseous: 0.2717, C4_TVOC: 0.1734, C5_Comfort: 0.1859, C6_NO2: 0.2495, C7_Coverage: 4, C8_Burden: 4, C9_Strictness: 0.1003 },
+  IEI:         { C1_HCHO: 0.1182, C2_Particulate: 0.2120, C3_Gaseous: 0.1174, C4_TVOC: 0.2180, C5_Comfort: 0.1932, C6_NO2: 0.1197, C7_Coverage: 8, C8_Burden: 8, C9_Strictness: 0.1005 },
+  IEITW:       { C1_HCHO: 0.0903, C2_Particulate: 0.0569, C3_Gaseous: 0.0940, C4_TVOC: 0.0583, C5_Comfort: 0.0590, C6_NO2: 0.0835, C7_Coverage: 5, C8_Burden: 5, C9_Strictness: 0.7917 }
 };
 
 var BENEFIT_FLAGS = {
-  C1_HCHO: true, C2_Particulate: true, C3_Gaseous: true,
-  C4_Coverage: true, C5_Burden: false, C6_Strictness: true
+  C1_HCHO: true, C2_Particulate: true, C3_Gaseous: true, C4_TVOC: true, C5_Comfort: true, C6_NO2: true,
+  C7_Coverage: true, C8_Burden: false, C9_Strictness: true
 };
 
-var CRITERIA = ['C1_HCHO', 'C2_Particulate', 'C3_Gaseous', 'C4_Coverage', 'C5_Burden', 'C6_Strictness'];
-var POLLUTANT_TO_CRITERION = { hcho: 'C1_HCHO', particulate: 'C2_Particulate', gaseous: 'C3_Gaseous' };
+var CRITERIA = ['C1_HCHO', 'C2_Particulate', 'C3_Gaseous', 'C4_TVOC', 'C5_Comfort', 'C6_NO2', 'C7_Coverage', 'C8_Burden', 'C9_Strictness'];
+var POLLUTANT_CRITERIA = ['C1_HCHO', 'C2_Particulate', 'C3_Gaseous', 'C4_TVOC', 'C5_Comfort', 'C6_NO2'];
+var POLLUTANT_TO_CRITERION = { hcho: 'C1_HCHO', particulate: 'C2_Particulate', gaseous: 'C3_Gaseous', tvoc: 'C4_TVOC', comfort: 'C5_Comfort', no2: 'C6_NO2' };
 var POLLUTANT_BUDGET = 0.8;
-var STRUCTURAL_DEFAULTS = { C4_Coverage: 0.05, C5_Burden: 0.05, C6_Strictness: 0.10 };
+var STRUCTURAL_DEFAULTS = { C7_Coverage: 0.05, C8_Burden: 0.05, C9_Strictness: 0.10 };
 var OVERRIDE_TARGET = 0.3;
 
 // Rank-sum weighting: the first-clicked pollutant concern gets the largest
@@ -385,11 +399,10 @@ function buildBaseWeights(rankedConcerns) {
   var weights = {};
   var n = rankedConcerns.length;
   if(n === 0) {
-    weights.C1_HCHO = POLLUTANT_BUDGET / 3;
-    weights.C2_Particulate = POLLUTANT_BUDGET / 3;
-    weights.C3_Gaseous = POLLUTANT_BUDGET / 3;
+    // even split across all 6 pollutant criteria if somehow nothing was ranked
+    POLLUTANT_CRITERIA.forEach(function(crit) { weights[crit] = POLLUTANT_BUDGET / POLLUTANT_CRITERIA.length; });
   } else {
-    weights.C1_HCHO = 0; weights.C2_Particulate = 0; weights.C3_Gaseous = 0;
+    POLLUTANT_CRITERIA.forEach(function(crit) { weights[crit] = 0; });
     var totalRaw = 0;
     for(var i = 0; i < n; i++) totalRaw += (n - i);
     rankedConcerns.forEach(function(p, idx) {
@@ -425,8 +438,8 @@ function rescaleToTargets(weights, targets) {
 function buildFinalWeights(rankedConcerns, tier, monitoring) {
   var weights = buildBaseWeights(rankedConcerns);
   var targets = {};
-  if(tier === 'A') targets.C6_Strictness = OVERRIDE_TARGET;
-  if(monitoring === 'basic') targets.C5_Burden = OVERRIDE_TARGET;
+  if(tier === 'A') targets.C9_Strictness = OVERRIDE_TARGET;
+  if(monitoring === 'basic') targets.C8_Burden = OVERRIDE_TARGET;
   return rescaleToTargets(weights, targets);
 }
 
